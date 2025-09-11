@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑客帝国 - 代码雨特效</title>
+    <style>
+        /* --- 基础页面和Canvas样式 --- */
+        
+        /* 确保页面没有边距和滚动条，并设置背景为黑色 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        /* 
+         *  设置Canvas画布样式 
+         *  - position: fixed;  让它固定在视口中，不随滚动条移动。
+         *  - z-index: -1;      将它置于最底层，作为背景。
+         *  - pointer-events: none; 让鼠标可以“穿透”它，点击它后面的内容。
+         */
+        #matrix-rain-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 这是用来绘制特效的HTML画布元素 -->
+    <canvas id="matrix-rain-canvas"></canvas>
+
+    <!-- 所有的特效逻辑都在下面的JavaScript中 -->
+    <script>
+        // --- 黑客帝国代码雨特效 ---
+
+        // 1. 获取并设置画布
+        const canvas = document.getElementById('matrix-rain-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // --- 您可以在这里进行自定义配置 ---
+
+        // 2. 自定义字符集 (可以修改、添加或删除这里的字符)
+        const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+        const alphabet = katakana + latin + nums;
+
+        // 3. 自定义字体大小和颜色
+        const fontSize = 16;
+        const fontColor = '#00F0A0'; // 经典的亮绿色
+
+        // --- 特效核心逻辑 (通常无需修改) ---
+
+        // 根据字体大小计算画布可以容纳多少列字符
+        const columns = canvas.width / fontSize;
+
+        // 为每一列创建一个"雨滴"，记录其当前下落的Y坐标
+        const rainDrops = [];
+        for (let x = 0; x < columns; x++) {
+            rainDrops[x] = 1;
+        }
+
+        // 动画绘制函数
+        function draw() {
+            // 绘制一个半透明的黑色矩形覆盖整个画布。
+            // 这会产生字符消失时的拖尾效果。'0.05'这个值越小，拖尾越长。
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 设置字符的颜色和字体
+            ctx.fillStyle = fontColor;
+            ctx.font = fontSize + 'px monospace';
+
+            // 遍历每一列雨滴
+            for (let i = 0; i < rainDrops.length; i++) {
+                // 从字符集中随机挑选一个字符
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                
+                // 在(x, y)坐标处绘制字符
+                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+
+                // 如果字符到达屏幕底部，并且通过一个随机数判断，则将其重置回顶部
+                // 这使得雨滴的下落看起来错落有致
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    rainDrops[i] = 0;
+                }
+
+                // 将雨滴的Y坐标向下移动一格
+                rainDrops[i]++;
+            }
+        }
+
+        // 设置动画循环，每33毫秒（约30帧/秒）执行一次draw函数
+        // 您可以减小 33 这个值来让代码雨下落得更快
+        let interval = setInterval(draw, 33);
+
+        // 监听窗口大小变化事件，以便在调整浏览器大小时特效也能自适应
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // 重新计算列数并重置所有雨滴，以适应新窗口大小
+            const newColumns = canvas.width / fontSize;
+            rainDrops.length = 0;
+            for (let x = 0; x < newColumns; x++) {
+                rainDrops[x] = 1;
+            }
+        });
+
+    </script>
+
+</body>
+</html>
